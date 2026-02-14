@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgentDB{% endblock %}</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --text: #e1e4ed;
+            --text-dim: #8b8fa3;
+            --accent: #6c8cff;
+            --accent-dim: #4a6ad4;
+            --green: #4ade80;
+            --yellow: #fbbf24;
+            --red: #f87171;
+            --orange: #fb923c;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        nav {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        nav a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        nav a:hover { text-decoration: underline; }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 2rem 0 1rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.15s;
+        }
+
+        .card:hover { border-color: var(--accent-dim); }
+
+        a.card { display: block; text-decoration: none; color: inherit; }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .card-meta {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge-pending { background: #fbbf2420; color: var(--yellow); }
+        .badge-done { background: #4ade8020; color: var(--green); }
+        .badge-in_progress { background: #6c8cff20; color: var(--accent); }
+
+        .badge-fact { background: #6c8cff20; color: var(--accent); }
+        .badge-experience { background: #fb923c20; color: var(--orange); }
+        .badge-insight { background: #4ade8020; color: var(--green); }
+
+        .stat {
+            display: inline-block;
+            margin-right: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .importance-bar {
+            display: inline-block;
+            width: 60px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            vertical-align: middle;
+        }
+
+        .importance-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .priority-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .priority-high { background: var(--red); }
+        .priority-mid { background: var(--yellow); }
+        .priority-low { background: var(--green); }
+
+        pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        .badge-success { background: #4ade8020; color: var(--green); }
+        .badge-error { background: #f8717120; color: var(--red); }
+        .badge-auto { background: #6c8cff20; color: var(--accent); }
+        .badge-manual { background: #fb923c20; color: var(--orange); }
+
+        .timeline-item {
+            border-left: 2px solid var(--border);
+            padding-left: 1rem;
+            margin-left: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .timeline-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-left: -1.3rem;
+            margin-right: 0.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .grid-3 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <a href="/">AgentDB</a>
+            <span style="float: right;"><a href="/admin">Admin</a></span>
+            {% block breadcrumb %}{% endblock %}
+        </nav>
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}AgentDB - {{ agent_id }}{% endblock %}
+
+{% block breadcrumb %}
+    &nbsp;&rsaquo;&nbsp; <a href="/agent/{{ agent_id }}">{{ agent_id }}</a>
+{% endblock %}
+
+{% block content %}
+<h1>{{ agent_id }}</h1>
+
+<!-- System Prompt -->
+<h2>System Prompt</h2>
+{% if prompt %}
+<div class="card">
+    <div class="card-meta" style="margin-bottom: 0.5rem;">
+        Version {{ prompt.version }} &middot; {{ prompt.created_at }}
+    </div>
+    <pre>{{ prompt.content }}</pre>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-meta">No system prompt set.</div>
+</div>
+{% endif %}
+
+<!-- Todos -->
+<h2>Pending Todos</h2>
+{% if todos %}
+    {% for todo in todos %}
+    <div class="card">
+        <span class="priority-indicator {% if todo.priority >= 8 %}priority-high{% elif todo.priority >= 5 %}priority-mid{% else %}priority-low{% endif %}"></span>
+        <span class="card-title">{{ todo.content }}</span>
+        <span class="card-meta" style="margin-left: 0.5rem;">
+            P{{ todo.priority }}
+        </span>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No pending todos.</div></div>
+{% endif %}
+
+<!-- Memories -->
+<h2>Memories</h2>
+{% if memories %}
+    {% for mem in memories %}
+    <div class="card">
+        <div>
+            <span class="card-title">{{ mem.title }}</span>
+            <span class="badge badge-{{ mem.mem_type }}">{{ mem.mem_type }}</span>
+        </div>
+        <div style="margin: 0.35rem 0;">
+            <span class="importance-bar">
+                <span class="importance-bar-fill" style="width: {{ (mem.importance * 100)|int }}%"></span>
+            </span>
+            <span class="card-meta" style="margin-left: 0.3rem;">{{ '%.2f'|format(mem.importance) }}</span>
+        </div>
+        <div class="card-meta">{{ mem.content[:200] }}{% if mem.content|length > 200 %}...{% endif %}</div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No memories stored.</div></div>
+{% endif %}
+
+<!-- Skills -->
+<h2>Skills</h2>
+{% if skill_categories %}
+    {% for category, skills in skill_categories.items() %}
+    <div class="card">
+        <div class="card-title">{{ category }}</div>
+        {% for s in skills %}
+        <div class="card-meta" style="margin-left: 1rem;">
+            {{ s.name }} &mdash; {{ s.description }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No skills registered.</div></div>
+{% endif %}
+
+<!-- Buffers -->
+<h2>Buffers</h2>
+{% if buffers %}
+    {% for buf in buffers %}
+    <div class="card">
+        <span class="card-title">{{ buf.title }}</span>
+        <span class="card-meta">{{ buf.created_at }}</span>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No buffers stored.</div></div>
+{% endif %}
+
+<!-- Tool Calls -->
+<h2>Recent Tool Calls</h2>
+{% if tool_calls %}
+    {% for tc in tool_calls %}
+    <div class="card">
+        <span class="card-title">{{ tc.tool_name }}</span>
+        <span class="badge badge-{{ tc.status }}">{{ tc.status }}</span>
+        <span class="badge badge-{{ tc.source }}">{{ tc.source }}</span>
+        {% if tc.duration_ms %}
+        <span class="card-meta" style="margin-left: 0.5rem;">{{ tc.duration_ms }}ms</span>
+        {% endif %}
+        <div class="card-meta">{{ tc.created_at }}</div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No tool calls recorded.</div></div>
+{% endif %}
+
+<!-- Awakenings Timeline -->
+<h2>Awakenings</h2>
+{% if awakenings %}
+    {% for aw in awakenings %}
+    <a class="card" href="/agent/{{ agent_id }}/awakening/{{ aw.id }}">
+        <div class="card-title">Awakening #{{ aw.id }}</div>
+        <div class="card-meta">
+            {{ aw.created_at }}
+            &middot; {{ aw.total_tokens }} tokens
+            {% if aw.loaded_system_prompt_version %}
+                &middot; prompt v{{ aw.loaded_system_prompt_version }}
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No awakenings recorded.</div></div>
+{% endif %}
+{% endblock %}

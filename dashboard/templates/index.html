@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}AgentDB - Agents{% endblock %}
+
+{% block content %}
+<h1>Agents</h1>
+
+{% if agents %}
+    {% for agent in agents %}
+    <a class="card" href="/agent/{{ agent.id }}">
+        <div class="card-title">{{ agent.id }}</div>
+        <div class="card-meta">
+            <span class="stat">
+                Todos: <span class="stat-value">{{ agent.pending_todos }}</span>
+            </span>
+            <span class="stat">
+                Memories: <span class="stat-value">{{ agent.memory_count }}</span>
+            </span>
+            {% if agent.last_awakening %}
+            <span class="stat">
+                Last awakening: {{ agent.last_awakening }}
+            </span>
+            {% else %}
+            <span class="stat">Never awakened</span>
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        No agents found.<br>
+        Agents are created when they first call the <code>awaken</code> MCP tool.
+    </div>
+{% endif %}
+{% endblock %}

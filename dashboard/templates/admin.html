@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}AgentDB - Admin{% endblock %}
+
+{% block breadcrumb %}
+    &nbsp;&rsaquo;&nbsp; <a href="/admin">Admin</a>
+{% endblock %}
+
+{% block content %}
+<h1>Admin Overview</h1>
+
+<!-- Agent Summary Cards -->
+<h2>Agents</h2>
+{% if agents %}
+    <div class="grid-3">
+    {% for agent in agents %}
+        <a class="card" href="/agent/{{ agent.id }}">
+            <div class="card-title">{{ agent.id }}</div>
+            <div style="margin-top: 0.5rem;">
+                <span class="stat">
+                    <span class="stat-value">{{ agent.pending_todos }}</span> pending todos
+                </span>
+            </div>
+            <div>
+                <span class="stat">
+                    <span class="stat-value">{{ agent.memory_count }}</span> memories
+                </span>
+            </div>
+            <div>
+                <span class="stat">
+                    <span class="stat-value">{{ agent.tool_call_count }}</span> tool calls
+                </span>
+            </div>
+            {% if agent.last_awakening %}
+            <div class="card-meta" style="margin-top: 0.5rem;">
+                Last awakened: {{ agent.last_awakening }}
+            </div>
+            {% else %}
+            <div class="card-meta" style="margin-top: 0.5rem;">Never awakened</div>
+            {% endif %}
+        </a>
+    {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">No agents found.</div>
+{% endif %}
+
+<!-- Recent Tool Activity Timeline -->
+<h2>Recent Tool Activity</h2>
+{% if recent_tool_activity %}
+    {% for tc in recent_tool_activity %}
+    <div class="timeline-item">
+        <span class="timeline-dot"></span>
+        <span class="card-title">{{ tc.tool_name }}</span>
+        <span class="badge badge-{{ tc.status }}">{{ tc.status }}</span>
+        <span class="badge badge-{{ tc.source }}">{{ tc.source }}</span>
+        {% if tc.duration_ms %}
+        <span class="card-meta" style="margin-left: 0.3rem;">{{ tc.duration_ms }}ms</span>
+        {% endif %}
+        <div class="card-meta">
+            <a href="/agent/{{ tc.agent_id }}" style="color: var(--accent);">{{ tc.agent_id }}</a>
+            &middot; {{ tc.created_at }}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">No tool activity recorded yet.</div>
+{% endif %}
+{% endblock %}

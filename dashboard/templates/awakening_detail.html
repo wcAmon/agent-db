@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}AgentDB - {{ agent_id }} - Awakening #{{ awakening.id }}{% endblock %}
+
+{% block breadcrumb %}
+    &nbsp;&rsaquo;&nbsp; <a href="/agent/{{ agent_id }}">{{ agent_id }}</a>
+    &nbsp;&rsaquo;&nbsp; Awakening #{{ awakening.id }}
+{% endblock %}
+
+{% block content %}
+<h1>Awakening #{{ awakening.id }}</h1>
+
+<div class="card">
+    <div class="card-meta">
+        <span class="stat">Time: <span class="stat-value">{{ awakening.created_at }}</span></span>
+        <span class="stat">Tokens: <span class="stat-value">{{ awakening.total_tokens }}</span></span>
+        {% if awakening.loaded_system_prompt_version %}
+        <span class="stat">Prompt: <span class="stat-value">v{{ awakening.loaded_system_prompt_version }}</span></span>
+        {% endif %}
+    </div>
+</div>
+
+<!-- System Prompt Snapshot -->
+{% if prompt %}
+<h2>System Prompt (v{{ prompt.version }})</h2>
+<div class="card">
+    <pre>{{ prompt.content }}</pre>
+</div>
+{% endif %}
+
+<!-- Loaded Todos -->
+<h2>Loaded Todos ({{ todos|length }})</h2>
+{% if todos %}
+    {% for todo in todos %}
+    <div class="card">
+        <span class="priority-indicator {% if todo.priority >= 8 %}priority-high{% elif todo.priority >= 5 %}priority-mid{% else %}priority-low{% endif %}"></span>
+        {{ todo.content }}
+        <span class="card-meta">P{{ todo.priority }}</span>
+        <span class="badge badge-{{ todo.status }}">{{ todo.status }}</span>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No todos loaded.</div></div>
+{% endif %}
+
+<!-- Loaded Memories -->
+<h2>Loaded Memories ({{ memories|length }})</h2>
+{% if memories %}
+    {% for mem in memories %}
+    <div class="card">
+        <div>
+            <span class="card-title">{{ mem.title }}</span>
+            <span class="badge badge-{{ mem.mem_type }}">{{ mem.mem_type }}</span>
+            <span class="card-meta" style="margin-left: 0.5rem;">
+                importance: {{ '%.2f'|format(mem.importance) }}
+            </span>
+        </div>
+        <div class="card-meta" style="margin-top: 0.25rem;">
+            {{ mem.content[:300] }}{% if mem.content|length > 300 %}...{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No memories loaded.</div></div>
+{% endif %}
+
+<!-- Loaded Skills -->
+<h2>Loaded Skills ({{ skills|length }})</h2>
+{% if skills %}
+    <div class="grid-2">
+    {% for s in skills %}
+        <div class="card">
+            <div class="card-title">{{ s.name }}</div>
+            <div class="card-meta">{{ s.category }} &mdash; {{ s.description }}</div>
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <div class="card"><div class="card-meta">No skills loaded.</div></div>
+{% endif %}
+
+<!-- Loaded Buffers -->
+<h2>Buffer References ({{ buffers|length }})</h2>
+{% if buffers %}
+    {% for buf in buffers %}
+    <div class="card">
+        <span class="card-title">{{ buf.title }}</span>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No buffer references.</div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentdb"
+version = "0.1.0"
+description = "MCP-based Agent memory management system with layered awakening"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.9.0",
+]
+
+[project.optional-dependencies]
+dashboard = [
+    "flask>=3.0",
+    "sqlalchemy>=2.0",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[project.scripts]
+agentdb-server = "agentdb_server.server:main"
+agentdb-dashboard = "dashboard.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agentdb_server", "dashboard"]
