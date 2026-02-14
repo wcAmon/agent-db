@@ -23,6 +23,56 @@
 </div>
 {% endif %}
 
+<!-- Schedule Config -->
+<h2>Schedule Config</h2>
+{% if schedule_config %}
+<div class="card">
+    <span class="badge badge-{% if schedule_config.is_enabled %}enabled{% else %}disabled{% endif %}">
+        {% if schedule_config.is_enabled %}enabled{% else %}disabled{% endif %}
+    </span>
+    <span class="card-meta" style="margin-left: 0.5rem;">
+        every {{ schedule_config.interval_seconds }}s
+        &middot; max {{ schedule_config.max_turns }} turns
+        &middot; {{ schedule_config.model }}
+        &middot; {{ schedule_config.total_runs }} total runs
+    </span>
+    {% if schedule_config.last_run_at %}
+    <div class="card-meta" style="margin-top: 0.25rem;">
+        Last run: {{ schedule_config.last_run_at }}
+        {% if schedule_config.last_run_status %}
+        <span class="badge badge-{{ schedule_config.last_run_status }}">{{ schedule_config.last_run_status }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if schedule_config.last_run_error %}
+    <div class="card-meta" style="margin-top: 0.25rem; color: var(--red);">
+        Error: {{ schedule_config.last_run_error[:200] }}
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-meta">No schedule configured.</div>
+</div>
+{% endif %}
+
+<!-- MCP Servers -->
+<h2>MCP Servers</h2>
+{% if mcp_servers %}
+    {% for srv in mcp_servers %}
+    <div class="card">
+        <span class="card-title">{{ srv.name }}</span>
+        <span class="badge badge-{{ srv.server_type }}">{{ srv.server_type }}</span>
+        <span class="badge badge-{% if srv.is_enabled %}enabled{% else %}disabled{% endif %}">
+            {% if srv.is_enabled %}enabled{% else %}disabled{% endif %}
+        </span>
+        <div class="card-meta">{{ srv.command }}</div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No MCP servers configured.</div></div>
+{% endif %}
+
 <!-- Todos -->
 <h2>Pending Todos</h2>
 {% if todos %}
@@ -107,6 +157,35 @@
     {% endfor %}
 {% else %}
     <div class="card"><div class="card-meta">No tool calls recorded.</div></div>
+{% endif %}
+
+<!-- Scheduled Runs -->
+<h2>Scheduled Runs</h2>
+{% if scheduled_runs %}
+    {% for run in scheduled_runs %}
+    <div class="card">
+        <span class="card-title">Run #{{ run.id }}</span>
+        <span class="badge badge-{{ run.status }}">{{ run.status }}</span>
+        {% if run.model %}
+        <span class="card-meta" style="margin-left: 0.5rem;">{{ run.model }}</span>
+        {% endif %}
+        {% if run.duration_ms %}
+        <span class="card-meta" style="margin-left: 0.5rem;">{{ run.duration_ms }}ms</span>
+        {% endif %}
+        {% if run.num_turns %}
+        <span class="card-meta" style="margin-left: 0.5rem;">{{ run.num_turns }} turns</span>
+        {% endif %}
+        <div class="card-meta">{{ run.created_at }}</div>
+        {% if run.error_message %}
+        <div class="card-meta" style="color: var(--red);">{{ run.error_message[:200] }}</div>
+        {% endif %}
+        {% if run.response_summary %}
+        <div class="card-meta" style="margin-top: 0.25rem;">{{ run.response_summary[:300] }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card"><div class="card-meta">No scheduled runs recorded.</div></div>
 {% endif %}
 
 <!-- Awakenings Timeline -->

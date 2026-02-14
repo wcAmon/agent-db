@@ -7,7 +7,12 @@
 {% if agents %}
     {% for agent in agents %}
     <a class="card" href="/agent/{{ agent.id }}">
-        <div class="card-title">{{ agent.id }}</div>
+        <div class="card-title">
+            {{ agent.id }}
+            {% if agent.schedule_enabled %}
+            <span class="badge badge-enabled" style="margin-left: 0.5rem;">scheduled</span>
+            {% endif %}
+        </div>
         <div class="card-meta">
             <span class="stat">
                 Todos: <span class="stat-value">{{ agent.pending_todos }}</span>

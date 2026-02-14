@@ -168,8 +168,13 @@
 
         .badge-success { background: #4ade8020; color: var(--green); }
         .badge-error { background: #f8717120; color: var(--red); }
+        .badge-running { background: #6c8cff20; color: var(--accent); }
         .badge-auto { background: #6c8cff20; color: var(--accent); }
         .badge-manual { background: #fb923c20; color: var(--orange); }
+        .badge-enabled { background: #4ade8020; color: var(--green); }
+        .badge-disabled { background: #f8717120; color: var(--red); }
+        .badge-stdio { background: #6c8cff20; color: var(--accent); }
+        .badge-sse { background: #fb923c20; color: var(--orange); }
 
         .timeline-item {
             border-left: 2px solid var(--border);
@@ -204,7 +209,11 @@
     <div class="container">
         <nav>
             <a href="/">AgentDB</a>
-            <span style="float: right;"><a href="/admin">Admin</a></span>
+            <span style="float: right;">
+                <a href="/admin">Admin</a>
+                &nbsp;&middot;&nbsp;
+                <a href="/docs" target="_blank">API Docs</a>
+            </span>
             {% block breadcrumb %}{% endblock %}
         </nav>
         {% block content %}{% endblock %}

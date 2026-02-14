@@ -13,17 +13,25 @@ dependencies = [
 
 [project.optional-dependencies]
 dashboard = [
-    "flask>=3.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "jinja2>=3.1",
     "sqlalchemy>=2.0",
+    "pydantic>=2.0",
+]
+runner = [
+    "claude-code-sdk>=0.1.0",
 ]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
 agentdb-server = "agentdb_server.server:main"
-agentdb-dashboard = "dashboard.app:main"
+agentdb-dashboard = "dashboard.main:main"
+agentdb-runner = "agent_runner.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["agentdb_server", "dashboard"]
+packages = ["agentdb_server", "dashboard", "agent_runner"]

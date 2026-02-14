@@ -98,6 +98,51 @@ class Awakening(Base):
     created_at = Column(DateTime)
 
 
+class McpServer(Base):
+    __tablename__ = "mcp_servers"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False, unique=True)
+    server_type = Column(String, nullable=False, default="stdio")
+    command = Column(String, nullable=False)
+    args = Column(Text)  # JSON array
+    env = Column(Text)   # JSON object
+    is_enabled = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+
+class AgentScheduleConfig(Base):
+    __tablename__ = "agent_schedule_config"
+
+    id = Column(Integer, primary_key=True)
+    is_enabled = Column(Boolean, nullable=False, default=False)
+    interval_seconds = Column(Integer, nullable=False, default=300)
+    max_turns = Column(Integer, nullable=False, default=20)
+    model = Column(String, nullable=False, default="claude-sonnet-4-5")
+    initial_prompt = Column(Text, nullable=False, default="Start by calling awaken with include_tool_history=true, then act according to your system prompt.")
+    last_run_at = Column(DateTime)
+    last_run_status = Column(String)
+    last_run_error = Column(Text)
+    total_runs = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+
+class ScheduledRun(Base):
+    __tablename__ = "scheduled_runs"
+
+    id = Column(Integer, primary_key=True)
+    status = Column(String, nullable=False, default="running")
+    model = Column(String)
+    num_turns = Column(Integer)
+    duration_ms = Column(Integer)
+    error_message = Column(Text)
+    response_summary = Column(Text)
+    awakening_id = Column(Integer)
+    created_at = Column(DateTime)
+
+
 def get_session(db_path: str) -> Session:
     """Create a session for an agent database.
 

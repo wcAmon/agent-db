@@ -36,11 +36,54 @@ class DatabaseManager:
 
     def _migrate(self, conn: sqlite3.Connection):
         """Apply migrations for columns added after initial schema."""
+        # Migration 1: loaded_tool_calls column
         try:
             conn.execute("ALTER TABLE awakenings ADD COLUMN loaded_tool_calls TEXT")
             conn.commit()
         except sqlite3.OperationalError:
             pass  # Column already exists
+
+        # Migration 2: new tables for scheduled runner
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS mcp_servers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                server_type TEXT NOT NULL DEFAULT 'stdio' CHECK(server_type IN ('stdio', 'sse')),
+                command TEXT NOT NULL,
+                args TEXT,
+                env TEXT,
+                is_enabled BOOLEAN NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS agent_schedule_config (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                is_enabled BOOLEAN NOT NULL DEFAULT 0,
+                interval_seconds INTEGER NOT NULL DEFAULT 300,
+                max_turns INTEGER NOT NULL DEFAULT 20,
+                model TEXT NOT NULL DEFAULT 'claude-sonnet-4-5',
+                initial_prompt TEXT NOT NULL DEFAULT 'Start by calling awaken with include_tool_history=true, then act according to your system prompt.',
+                last_run_at TIMESTAMP,
+                last_run_status TEXT CHECK(last_run_status IN ('success', 'error')),
+                last_run_error TEXT,
+                total_runs INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS scheduled_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                status TEXT NOT NULL DEFAULT 'running' CHECK(status IN ('running', 'success', 'error')),
+                model TEXT,
+                num_turns INTEGER,
+                duration_ms INTEGER,
+                error_message TEXT,
+                response_summary TEXT,
+                awakening_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(is_enabled);
+            CREATE INDEX IF NOT EXISTS idx_scheduled_runs_created ON scheduled_runs(created_at DESC);
+        """)
 
     def get_write_connection(self, agent_id: str) -> sqlite3.Connection:
         """Get or create a long-lived write connection for an agent.

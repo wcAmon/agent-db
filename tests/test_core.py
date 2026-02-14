@@ -204,13 +204,12 @@ class TestBuffers:
         conn.commit()
         rows = conn.execute("SELECT id, title FROM buffers").fetchall()
         assert len(rows) == 1
-        assert "content" not in dict(rows[0]) or rows[0]["title"] == "doc1"
+        assert rows[0]["title"] == "doc1"
 
 
 class TestAwakenings:
     def test_record_awakening(self, db):
         conn = db.get_write_connection("aw_test")
-        # Set up some data
         conn.execute(
             "INSERT INTO system_prompts (content, version, is_active) VALUES ('prompt', 1, 1)"
         )
@@ -220,7 +219,6 @@ class TestAwakenings:
         )
         conn.commit()
 
-        # Simulate awakening record
         conn.execute(
             "INSERT INTO awakenings (loaded_system_prompt_version, loaded_todos, "
             "loaded_skills, loaded_memories, loaded_buffers, total_tokens) "
@@ -331,11 +329,131 @@ class TestConcurrency:
             rows = conn_r.execute("SELECT * FROM todos").fetchall()
             assert len(rows) == 1
 
-            # Write while reader is open
             conn_w.execute("INSERT INTO todos (content, priority) VALUES ('b', 3)")
             conn_w.commit()
 
-        # Verify both writes landed
         with db.read_connection("concurrent") as conn_r:
             rows = conn_r.execute("SELECT * FROM todos").fetchall()
             assert len(rows) == 2
+
+
+# ── New table tests ────────────────────────────────────────────────
+
+
+class TestMcpServers:
+    def test_create_mcp_server(self, db):
+        conn = db.get_write_connection("mcp_test")
+        conn.execute(
+            "INSERT INTO mcp_servers (name, server_type, command, args, env) "
+            "VALUES (?, ?, ?, ?, ?)",
+            ("agentdb", "stdio", "agentdb-server", json.dumps(["--verbose"]), json.dumps({"KEY": "val"})),
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM mcp_servers WHERE id = 1").fetchone()
+        assert row["name"] == "agentdb"
+        assert row["server_type"] == "stdio"
+        assert row["command"] == "agentdb-server"
+        assert json.loads(row["args"]) == ["--verbose"]
+        assert json.loads(row["env"]) == {"KEY": "val"}
+        assert row["is_enabled"] == 1
+
+    def test_unique_name(self, db):
+        conn = db.get_write_connection("mcp_unique")
+        conn.execute(
+            "INSERT INTO mcp_servers (name, command) VALUES ('srv1', 'cmd1')"
+        )
+        conn.commit()
+        with pytest.raises(Exception):
+            conn.execute(
+                "INSERT INTO mcp_servers (name, command) VALUES ('srv1', 'cmd2')"
+            )
+
+    def test_server_type_constraint(self, db):
+        conn = db.get_write_connection("mcp_type")
+        with pytest.raises(Exception):
+            conn.execute(
+                "INSERT INTO mcp_servers (name, server_type, command) VALUES ('x', 'grpc', 'cmd')"
+            )
+
+    def test_list_enabled(self, db):
+        conn = db.get_write_connection("mcp_enabled")
+        conn.execute("INSERT INTO mcp_servers (name, command) VALUES ('a', 'cmd1')")
+        conn.execute("INSERT INTO mcp_servers (name, command, is_enabled) VALUES ('b', 'cmd2', 0)")
+        conn.commit()
+        rows = conn.execute("SELECT * FROM mcp_servers WHERE is_enabled = 1").fetchall()
+        assert len(rows) == 1
+        assert rows[0]["name"] == "a"
+
+
+class TestAgentScheduleConfig:
+    def test_create_default(self, db):
+        conn = db.get_write_connection("sched_test")
+        conn.execute("INSERT INTO agent_schedule_config DEFAULT VALUES")
+        conn.commit()
+        row = conn.execute("SELECT * FROM agent_schedule_config WHERE id = 1").fetchone()
+        assert row["is_enabled"] == 0
+        assert row["interval_seconds"] == 300
+        assert row["max_turns"] == 20
+        assert row["model"] == "claude-sonnet-4-5"
+        assert row["total_runs"] == 0
+
+    def test_update_config(self, db):
+        conn = db.get_write_connection("sched_update")
+        conn.execute("INSERT INTO agent_schedule_config DEFAULT VALUES")
+        conn.execute(
+            "UPDATE agent_schedule_config SET is_enabled = 1, interval_seconds = 60 WHERE id = 1"
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM agent_schedule_config WHERE id = 1").fetchone()
+        assert row["is_enabled"] == 1
+        assert row["interval_seconds"] == 60
+
+    def test_last_run_status_constraint(self, db):
+        conn = db.get_write_connection("sched_status")
+        with pytest.raises(Exception):
+            conn.execute(
+                "INSERT INTO agent_schedule_config (last_run_status) VALUES ('unknown')"
+            )
+
+
+class TestScheduledRuns:
+    def test_create_run(self, db):
+        conn = db.get_write_connection("run_test")
+        conn.execute(
+            "INSERT INTO scheduled_runs (status, model, num_turns, duration_ms) "
+            "VALUES ('success', 'claude-sonnet-4-5', 5, 1200)"
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM scheduled_runs WHERE id = 1").fetchone()
+        assert row["status"] == "success"
+        assert row["model"] == "claude-sonnet-4-5"
+        assert row["num_turns"] == 5
+        assert row["duration_ms"] == 1200
+
+    def test_status_constraint(self, db):
+        conn = db.get_write_connection("run_constraint")
+        with pytest.raises(Exception):
+            conn.execute(
+                "INSERT INTO scheduled_runs (status) VALUES ('unknown')"
+            )
+
+    def test_error_run(self, db):
+        conn = db.get_write_connection("run_error")
+        conn.execute(
+            "INSERT INTO scheduled_runs (status, error_message) "
+            "VALUES ('error', 'API timeout')"
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM scheduled_runs WHERE id = 1").fetchone()
+        assert row["status"] == "error"
+        assert row["error_message"] == "API timeout"
+
+    def test_ordering(self, db):
+        conn = db.get_write_connection("run_order")
+        conn.execute("INSERT INTO scheduled_runs (status) VALUES ('success')")
+        conn.execute("INSERT INTO scheduled_runs (status) VALUES ('error')")
+        conn.commit()
+        rows = conn.execute(
+            "SELECT * FROM scheduled_runs ORDER BY created_at DESC"
+        ).fetchall()
+        assert len(rows) == 2
